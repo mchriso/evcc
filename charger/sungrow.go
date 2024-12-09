@@ -156,15 +156,18 @@ func (wb *Sungrow) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Sungrow) Enable(enable bool) error {
-	var u uint16
-	if !enable {
-		u = 1
-	}
-
-	_, err := wb.conn.WriteSingleRegister(sgRegRemoteControl, u)
+	//to wake up the vehicle, the sequence disable -> enable is necessary. Therefore, the charger shall always be disabled when calling "Enable", even if Enable == TRUE. Tested with Skoda Enyaq running SW 3.7.
+	
+	//allways disable charger
+	_, err := wb.conn.WriteSingleRegister(sgRegRemoteControl, 1)
 
 	if err == nil && enable {
-		_, err = wb.conn.WriteSingleRegister(sgRegSetOutI, wb.curr)
+		//enable charger
+		_, err := wb.conn.WriteSingleRegister(sgRegRemoteControl, 0)
+
+		if err == nil {
+			_, err = wb.conn.WriteSingleRegister(sgRegSetOutI, wb.curr)
+		}
 	}
 
 	return err
